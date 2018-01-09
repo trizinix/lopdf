@@ -20,14 +20,12 @@ impl Document {
 fn create_document() {
 	use super::Stream;
 	use super::content::*;
-	use chrono::prelude::Local;
 
 	let mut doc = Document::new();
 	doc.version = "1.5".to_string();
 	let info_id = doc.add_object(dictionary! {
 		"Title" => Object::string_literal("Create PDF document example"),
 		"Creator" => Object::string_literal("https://crates.io/crates/lopdf"),
-		"CreationDate" => Local::now(),
 	});
 	let pages_id = doc.new_object_id();
 	let font_id = doc.add_object(dictionary! {
@@ -40,14 +38,16 @@ fn create_document() {
 			"F1" => font_id,
 		},
 	});
-	let content = Content{operations: vec![
-		Operation::new("BT", vec![]),
-		Operation::new("Tf", vec!["F1".into(), 48.into()]),
-		Operation::new("Td", vec![100.into(), 600.into()]),
-		Operation::new("Tj", vec![Object::string_literal("Hello World!")]),
-		Operation::new("ET", vec![]),
-	]};
-	let content_id = doc.add_object(Stream::new(dictionary! {}, content.encode().unwrap()));
+	let content = Content {
+		operations: vec![
+			Operation::new("BT", vec![]),
+			Operation::new("Tf", vec!["F1".into(), 48.into()]),
+			Operation::new("Td", vec![100.into(), 600.into()]),
+			Operation::new("Tj", vec![Object::string_literal("Hello World!")]),
+			Operation::new("ET", vec![]),
+		],
+	};
+	let content_id = doc.add_object(Stream::new(dictionary!{}, content.encode().unwrap()));
 	let page_id = doc.add_object(dictionary! {
 		"Type" => "Page",
 		"Parent" => pages_id,

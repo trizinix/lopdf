@@ -1,6 +1,6 @@
 #![allow(dead_code)] // false positive
+use std::io::{Error, ErrorKind, Read, Result, Write};
 use std::mem;
-use std::io::{Result, Read, Write, Error, ErrorKind};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u8)]
@@ -48,16 +48,12 @@ pub fn decode_row(filter: FilterType, bpp: usize, previous: &[u8], current: &mut
 
 	match filter {
 		None => (),
-		Sub => {
-			for i in bpp..len {
-				current[i] = current[i].wrapping_add(current[i - bpp]);
-			}
-		}
-		Up => {
-			for i in 0..len {
-				current[i] = current[i].wrapping_add(previous[i]);
-			}
-		}
+		Sub => for i in bpp..len {
+			current[i] = current[i].wrapping_add(current[i - bpp]);
+		},
+		Up => for i in 0..len {
+			current[i] = current[i].wrapping_add(previous[i]);
+		},
 		Avg => {
 			for i in 0..bpp {
 				current[i] = current[i].wrapping_add(previous[i] / 2);
@@ -73,7 +69,11 @@ pub fn decode_row(filter: FilterType, bpp: usize, previous: &[u8], current: &mut
 			}
 
 			for i in bpp..len {
-				current[i] = current[i].wrapping_add(paeth_predict(current[i - bpp], previous[i], previous[i - bpp]));
+				current[i] = current[i].wrapping_add(paeth_predict(
+					current[i - bpp],
+					previous[i],
+					previous[i - bpp],
+				));
 			}
 		}
 	}
@@ -91,11 +91,19 @@ pub fn decode_frame(content: &[u8], bytes_per_pixel: usize, pixels_per_row: usiz
 			(&content[pos..]).read_exact(current.as_mut_slice())?;
 			pos += bytes_per_row;
 
-			decode_row(filter, bytes_per_pixel, previous.as_slice(), current.as_mut_slice());
+			decode_row(
+				filter,
+				bytes_per_pixel,
+				previous.as_slice(),
+				current.as_mut_slice(),
+			);
 			decoded.write_all(current.as_slice())?;
 			mem::swap(&mut previous, &mut current);
 		} else {
-			return Err(Error::new(ErrorKind::InvalidData, format!("invalid PNG filter type ({})", content[pos])));
+			return Err(Error::new(
+				ErrorKind::InvalidData,
+				format!("invalid PNG filter type ({})", content[pos]),
+			));
 		}
 	}
 	Ok(decoded)
@@ -107,16 +115,12 @@ pub fn encode_row(method: FilterType, bpp: usize, previous: &[u8], current: &mut
 
 	match method {
 		None => (),
-		Sub => {
-			for i in (bpp..len).rev() {
-				current[i] = current[i].wrapping_sub(current[i - bpp]);
-			}
-		}
-		Up => {
-			for i in 0..len {
-				current[i] = current[i].wrapping_sub(previous[i]);
-			}
-		}
+		Sub => for i in (bpp..len).rev() {
+			current[i] = current[i].wrapping_sub(current[i - bpp]);
+		},
+		Up => for i in 0..len {
+			current[i] = current[i].wrapping_sub(previous[i]);
+		},
 		Avg => {
 			for i in (bpp..len).rev() {
 				current[i] = current[i].wrapping_sub((current[i - bpp].wrapping_add(previous[i]) / 2));
@@ -128,7 +132,11 @@ pub fn encode_row(method: FilterType, bpp: usize, previous: &[u8], current: &mut
 		}
 		Paeth => {
 			for i in (bpp..len).rev() {
-				current[i] = current[i].wrapping_sub(paeth_predict(current[i - bpp], previous[i], previous[i - bpp]));
+				current[i] = current[i].wrapping_sub(paeth_predict(
+					current[i - bpp],
+					previous[i],
+					previous[i - bpp],
+				));
 			}
 
 			for i in 0..bpp {

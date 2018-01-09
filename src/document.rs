@@ -1,7 +1,7 @@
-use std::collections::BTreeMap;
-use xref::{Xref};
-use super::{Object, ObjectId, Dictionary};
+use super::{Dictionary, Object, ObjectId};
 use byref::ByRef;
+use std::collections::BTreeMap;
+use xref::Xref;
 
 /// PDF document.
 #[derive(Debug, Clone)]
@@ -23,7 +23,6 @@ pub struct Document {
 }
 
 impl Document {
-
 	/// Create new PDF document.
 	pub fn new() -> Document {
 		Document {
@@ -76,7 +75,7 @@ impl Document {
 					if !refs.contains(&id) {
 						refs.push(id);
 					}
-				},
+				}
 				_ => {}
 			}
 		}
@@ -100,10 +99,17 @@ impl Document {
 	/// Get page numbers and corresponding object ids.
 	pub fn get_pages(&self) -> BTreeMap<u32, ObjectId> {
 		fn collect_pages(doc: &Document, page_tree_id: ObjectId, page_number: &mut u32, pages: &mut BTreeMap<u32, ObjectId>) {
-			if let Some(kids) = doc.get_object(page_tree_id).and_then(|obj|obj.as_dict()).and_then(|page_tree|page_tree.get("Kids")).and_then(|obj|obj.as_array()) {
+			if let Some(kids) = doc.get_object(page_tree_id)
+				.and_then(|obj| obj.as_dict())
+				.and_then(|page_tree| page_tree.get("Kids"))
+				.and_then(|obj| obj.as_array())
+			{
 				for kid in kids {
 					if let Some(kid_id) = kid.as_reference() {
-						if let Some(type_name) = doc.get_object(kid_id).and_then(|obj|obj.as_dict()).and_then(|dict|dict.type_name()) {
+						if let Some(type_name) = doc.get_object(kid_id)
+							.and_then(|obj| obj.as_dict())
+							.and_then(|dict| dict.type_name())
+						{
 							match type_name {
 								"Page" => {
 									pages.insert(*page_number, kid_id);
@@ -122,7 +128,10 @@ impl Document {
 
 		let mut pages = BTreeMap::new();
 		let mut page_number = 1;
-		if let Some(page_tree_id) = self.catalog().and_then(|cat|cat.get("Pages")).and_then(|pages|pages.as_reference()) {
+		if let Some(page_tree_id) = self.catalog()
+			.and_then(|cat| cat.get("Pages"))
+			.and_then(|pages| pages.as_reference())
+		{
 			collect_pages(self, page_tree_id, &mut page_number, &mut pages);
 		}
 		pages

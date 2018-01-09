@@ -11,11 +11,8 @@ description = "A Rust library for PDF document manipulation."
 
 [dependencies]
 pom = "1.0.1"
-chrono = "0.3.0"
-flate2 = "0.2.14"
+inflate = "0.3.3"
+deflate = "0.7.17"
 linked-hash-map = "0.3.0"
 dtoa = "0.4.1"
 itoa = "0.3.1"
-
-[badges]
-travis-ci = { repository = "J-F-Liu/lopdf" }

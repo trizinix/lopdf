@@ -12,15 +12,14 @@ fn modify_text() -> Result<Document> {
 				let mut content = stream.decode_content().unwrap();
 				content.operations[3].operands[0] = Object::string_literal("Modified text!");
 				stream.set_content(content.encode().unwrap());
-			},
-			_ => ()
+			}
+			_ => (),
 		}
 	}
 
 	doc.save("test_3_modify.pdf")?;
 	Ok(doc)
 }
-
 
 #[test]
 fn test_modify() {
@@ -29,13 +28,16 @@ fn test_modify() {
 
 #[test]
 fn test_get_object() {
+	use self::Object;
 	use lopdf::Dictionary as LoDictionary;
 	use lopdf::Stream as LoStream;
-	use self::Object;
 
 	let mut doc = Document::new();
 	let id = doc.add_object(Object::string_literal("test"));
-	let id2 = doc.add_object(Object::Stream(LoStream::new(LoDictionary::new(), "stream".as_bytes().to_vec())));
+	let id2 = doc.add_object(Object::Stream(LoStream::new(
+		LoDictionary::new(),
+		"stream".as_bytes().to_vec(),
+	)));
 
 	println!("{:?}", id);
 	println!("{:?}", id2);
