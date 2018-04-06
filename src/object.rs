@@ -129,6 +129,7 @@ impl From<ObjectId> for Object {
 }
 
 impl Object {
+	// TODO: Escape chars
 	pub fn string_literal<S: Into<Vec<u8>>>(s: S) -> Self {
 		Object::String(s.into(), StringFormat::Literal)
 	}
@@ -157,6 +158,13 @@ impl Object {
 	pub fn as_name(&self) -> Option<&[u8]> {
 		match *self {
 			Object::Name(ref name) => Some(name),
+			_ => None,
+		}
+	}
+
+	pub fn as_name_str(&self) -> Option<&str> {
+		match *self {
+			Object::Name(ref name) => str::from_utf8(name).ok(),
 			_ => None,
 		}
 	}
@@ -196,11 +204,34 @@ impl Object {
 		}
 	}
 
+	pub fn as_byte_string(&self) -> Option<&Vec<u8>> {
+		match *self {
+			// TODO
+			Object::String(ref bytes, _) => Some(bytes),
+			_ => None
+		}
+	}
+
 	pub fn type_name(&self) -> Option<&str> {
 		match *self {
 			Object::Dictionary(ref dict) => dict.type_name(),
 			Object::Stream(ref stream) => stream.dict.type_name(),
 			_ => None,
+		}
+	}
+
+	pub fn object_type(&self) -> &str {
+		match *self {
+			Object::Null => "Null",
+			Object::Boolean(_) => "Boolean",
+			Object::Integer(_) => "Integer",
+			Object::Real(_) => "Real",
+			Object::Name(_) => "Name",
+			Object::String(_, _) => "String",
+			Object::Array(_) => "Array",
+			Object::Dictionary(_) => "Dictionary",
+			Object::Stream(_) => "Stream",
+			Object::Reference(_) => "Reference",
 		}
 	}
 }
